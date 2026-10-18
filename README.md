@@ -1,28 +1,59 @@
 # Big Board
 
-Standalone college football prospect tracker extracted from Nova Dashboard. Only Big Board is included: no homelab services, cameras, other sports apps, server credentials, or Nova navigation.
+### College Football Position Tracker
 
-## Included
+Big Board follows college football players throughout the season, organizing them into position-specific boards that make it easy to compare production, track prospects, and see who is rising or falling.
 
-- Eight position groups: QB, RB, WR, EDGE, OL, DT, LB, and DB.
-- Position-specific leader cards, sortable tables, search, and class/draft-year filters.
-- Scouting and advanced-metric editing, baseline reset, and ESPN statistics sync.
-- PPI / TOV and other derived metrics, recalculated using season game participation.
-- Sync reporting that distinguishes verified records, changed records, and skipped players.
-- Populated current and baseline datasets: 55 prospects each, including existing scouting notes and rankings.
+The goal is a living board: after games finish, new statistics flow in, player metrics are recalculated, and rankings update to reflect how the season is unfolding.
+
+## What you can do today
+
+- Explore 55 players across eight position groups: **QB, RB, WR, EDGE, OL, DT, LB, and DB**.
+- Compare position-specific statistics and category leaders in sortable tables.
+- Find players by name or team and filter by class or draft-eligible year.
+- Manually sync available 2026 season statistics from ESPN.
+- Review derived metrics, including Passing Production Index (PPI) and Total Offensive Value (TOV) for quarterbacks.
+- Maintain scouting notes, injury notes, and advanced metrics that need manual input.
+- See which players were refreshed, which records changed, and why others were skipped during sync.
+
+## Where Big Board is headed
+
+### Automatic updates after games
+
+Detect completed games and refresh the participating players' statistics without requiring a manual sync. Show when each record was last updated, retry delayed data, and distinguish pending results from completed updates.
+
+### Position boards that evolve with the season
+
+Recalculate rankings as fresh results arrive, using transparent, position-specific criteria. Track each player's previous rank and show movement up or down the board, with the performance changes behind that movement.
+
+### A season-long view
+
+Keep historical snapshots so a player's progression can be followed from week to week. Highlight breakout performances, sustained improvement, and changes in position-group leaders.
+
+### Scouting context alongside the numbers
+
+Combine updated production metrics with scouting notes and manually maintained advanced data. Keep editorial input distinct from automated rankings so both can inform player evaluation.
+
+**These are planned capabilities.** The current app supports manual stats sync and table sorting; it does not yet schedule postgame updates, automatically rerank prospects, or store ranking history. Displayed ranks currently come from saved rank values. Sorting a table changes the view, not those saved ranks. The ranking method still needs to be defined and implemented.
+
+## Data and metrics
+
+The repository includes a populated 55-player snapshot and a separate baseline used by the reset feature. The current sync targets the **2026 college football season**, accepts only matching-season statistics, and uses game participation to calculate per-game metrics.
+
+Data coverage varies by player and position. Missing or unsupported values retain their existing data rather than being treated as confirmed zeroes. Offensive-line grades and other advanced scouting fields remain manually maintained where the source does not provide them. Player identifiers and source availability may require maintenance.
+
+Scouting notes and baseline values are snapshots, not live reporting; refreshing statistics does not independently verify every note or advanced metric. Reset replaces the current records with the baseline snapshot.
 
 ## Run locally
 
-Use Node.js 22 LTS, then:
+Requires **Node.js 22 LTS**.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-The repository includes the current Nova prospect snapshot and the original reset baseline, published with the owner's explicit permission. No separate data download is required.
-
-Open http://localhost:3000. `/big-board` redirects to the standalone homepage.
+Open [localhost:3000](http://localhost:3000). The included dataset populates the board immediately.
 
 ```sh
 npm test
@@ -31,39 +62,22 @@ npm run build
 npm start
 ```
 
-## Files
+## Development
 
-- `src/app/page.tsx`: prospect board and edit controls.
-- `src/components/BigBoardHeader.tsx`: standalone navigation/header.
-- `src/app/api/prospects/route.ts`: read, edit, reset, and sync API.
-- `src/app/api/prospects/sync_espn.ts`: ESPN integration.
-- `src/data/prospects.json`: current persisted prospect snapshot.
-- `src/data/prospects_baseline.json`: original reset baseline.
-- `tests/prospects-sync.test.cjs`: isolated sync regression checks.
+Built with **Next.js, React, TypeScript, and Tailwind CSS**.
 
-## Hosting / Vercel handoff
+| Area | Location |
+| --- | --- |
+| Position boards, filters, and editing | `src/app/page.tsx` |
+| App header | `src/components/BigBoardHeader.tsx` |
+| Prospect API | `src/app/api/prospects/route.ts` |
+| ESPN statistics sync | `src/app/api/prospects/sync_espn.ts` |
+| Current player data | `src/data/prospects.json` |
+| Reset baseline | `src/data/prospects_baseline.json` |
+| Sync regression tests | `tests/prospects-sync.test.cjs` |
 
-This repository preserves the working Nova implementation. **It currently stores edits and sync results in local JSON files. Vercel's deployed application filesystem is not a durable writable database.** The app starts with the included 55-prospect snapshot. Production sync, edits, and reset need a persistent database/storage adapter before they will work reliably on Vercel. Writing to `/tmp` alone would not solve persistence.
+## Deployment status
 
-Before enabling public writes, add authentication/authorization to the mutation endpoints. The extracted API retains the original trusted-local-network behavior and currently has no login. Do not expose edit/reset/sync endpoints publicly without protecting them.
+The current implementation saves changes to local JSON files. A Vercel deployment needs durable storage for sync results, edits, and future ranking history. Public write operations also need authentication and authorization; the current API does not include a login.
 
-A Vercel deployment is not created or configured by this repository. Vercel Hobby is intended for personal/non-commercial use and is subject to usage limits: https://vercel.com/docs/plans/hobby .
-
-## ESPN data behavior
-
-- The sync currently targets the **2026 season** explicitly; adjust `season` in `sync_espn.ts` for a future season.
-- Only exact-season stats are accepted; old-season fallback is disabled.
-- Games played comes from the matching-season athlete game log before per-game metrics are calculated.
-- Missing/unsupported stats retain existing values, and skipped prospects show a reason.
-- OL grades, pressures, snaps, coverage grades, and similar advanced scouting fields remain manually maintained when ESPN does not supply them.
-- Player IDs and ESPN endpoint availability still need ongoing maintenance.
-- A successful stats sync does not verify scouting notes or advanced metrics.
-- Manual ranks and scouting edits are preserved by sync. Reset intentionally replaces the current data with the configured baseline.
-
-## Scope
-
-This is a separate codebase for future changes. Changes pushed here do not modify the live Nova dashboard automatically. No secrets or environment files are included.
-
-## Handoff for continued development
-
-Both datasets were copied from Nova on October 18, 2026. The current snapshot includes the repaired ESPN sync results; the baseline is intentionally the original reset snapshot. Existing scouting notes can describe earlier weeks and are not revalidated by sync. Before Vercel production use, replace file-based writes with durable storage and protect mutation endpoints, as described above. The live Nova deployment is maintained separately.
+Postgame scheduling, persistent storage, access controls, and the ranking engine are the next infrastructure and product steps toward a fully automatic season-long tracker.
