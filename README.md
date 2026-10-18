@@ -9,7 +9,7 @@ Standalone college football prospect tracker extracted from Nova Dashboard. Only
 - Scouting and advanced-metric editing, baseline reset, and ESPN statistics sync.
 - PPI / TOV and other derived metrics, recalculated using season game participation.
 - Sync reporting that distinguishes verified records, changed records, and skipped players.
-- Empty current/baseline data files. Actual player data and scouting notes remain on Nova; they are not published in this code-only repository.
+- Populated current and baseline datasets: 55 prospects each, including existing scouting notes and rankings.
 
 ## Run locally
 
@@ -20,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-The repository intentionally contains code only. To carry over your populated board, privately copy `src/data/prospects.json` and `src/data/prospects_baseline.json` from Nova into your local checkout; keep those records out of public commits if they contain private scouting notes.
+The repository includes the current Nova prospect snapshot and the original reset baseline, published with the owner's explicit permission. No separate data download is required.
 
 Open http://localhost:3000. `/big-board` redirects to the standalone homepage.
 
@@ -37,13 +37,13 @@ npm start
 - `src/components/BigBoardHeader.tsx`: standalone navigation/header.
 - `src/app/api/prospects/route.ts`: read, edit, reset, and sync API.
 - `src/app/api/prospects/sync_espn.ts`: ESPN integration.
-- `src/data/prospects.json`: current persisted data (empty starter array).
-- `src/data/prospects_baseline.json`: reset data (empty starter array).
+- `src/data/prospects.json`: current persisted prospect snapshot.
+- `src/data/prospects_baseline.json`: original reset baseline.
 - `tests/prospects-sync.test.cjs`: isolated sync regression checks.
 
 ## Hosting / Vercel handoff
 
-This repository preserves the working Nova implementation. **It currently stores edits and sync results in local JSON files. Vercel's deployed application filesystem is not a durable writable database.** The app starts with an empty board. Populate both JSON arrays with your prospect records locally. Production sync, edits, and reset need a persistent database/storage adapter before they will work reliably on Vercel. Writing to `/tmp` alone would not solve persistence.
+This repository preserves the working Nova implementation. **It currently stores edits and sync results in local JSON files. Vercel's deployed application filesystem is not a durable writable database.** The app starts with the included 55-prospect snapshot. Production sync, edits, and reset need a persistent database/storage adapter before they will work reliably on Vercel. Writing to `/tmp` alone would not solve persistence.
 
 Before enabling public writes, add authentication/authorization to the mutation endpoints. The extracted API retains the original trusted-local-network behavior and currently has no login. Do not expose edit/reset/sync endpoints publicly without protecting them.
 
@@ -63,3 +63,7 @@ A Vercel deployment is not created or configured by this repository. Vercel Hobb
 ## Scope
 
 This is a separate codebase for future changes. Changes pushed here do not modify the live Nova dashboard automatically. No secrets or environment files are included.
+
+## Handoff for continued development
+
+Both datasets were copied from Nova on October 18, 2026. The current snapshot includes the repaired ESPN sync results; the baseline is intentionally the original reset snapshot. Existing scouting notes can describe earlier weeks and are not revalidated by sync. Before Vercel production use, replace file-based writes with durable storage and protect mutation endpoints, as described above. The live Nova deployment is maintained separately.
